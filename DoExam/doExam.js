@@ -1,43 +1,57 @@
-async function findAnswer(lineTxt) {
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            type: 'POST',
-            url: 'localhost:8081',
-            data: lineTxt,
-            success: function (response) {
-                resolve(response);
-            },
-            //dataType: json
-        });
-    });
-}
 function main() {
     let results = []
-    const main = $('div.main')
-    const questions = main.find('td[class="hs11"][valign="top"]')
-    const options = main.find('.lanse11')
+    let main = $('div.item');
+    let questions = main.find('div.title1');
+    let options = main.find('div.ab');
+    let array = []
     for (let i = 0; i < questions.length; i++) {
-        const v = questions[i];
-        let lineTxt = $(v).text().trim()
-        lineTxt = lineTxt.replace(/\s+/g, '')
-
-        const r = await query(lineTxt)
-        const an = r.length ? r[0].answer : ''
-        results[i] = an
+        let v = questions[i];
+        let lineTxt = $(v).text().trim();
+        lineTxt = lineTxt.replace(/\s+/g, '');
+        array.push(lineTxt);
     }
-    var qs = $('.lanse11');
-    for (let i = 0; i < qs.length; i++) {
-        const q = qs[i];
-        const os = $(q).find('input');
-        const ots = $(q).find('label');
-        for (let j = 0; j < ots.length; j++) {
-            const v = $(ots[j]).text();
-            if ((results[i]).indexOf(v.slice(0, 1)) >= 0 ||
-                (results[i]).indexOf(v.slice(v.length - 1, v.length)) >= 0) {
-                $(os[j]).attr('checked', 'true');
-                $(os[j])[0].checked = true;
+    $.ajax({
+        async: false,
+        type: 'POST',
+        dataType: 'json',
+        url: 'http://localhost:8083',
+        data: {
+            'text': JSON.stringify(array)
+        },
+        success: function(r) {
+            console.log(r)
+            var qs = $('div.ab');
+            for (let i = 0; i < qs.length; i++) {
+                let q = qs[i];
+                let os = $(q).find('input');
+                let ops = $(q).find('.op');
+                if (r[i] != null) {
+                    for (let j = 0; j < ops.length; j++) {
+                        let v = $(ops[j]).text();
+                        if ((r[i]).indexOf(v.slice(0, 1)) >= 0 ||
+                            (r[i]).indexOf(v.slice(v.length - 1, v.length)) >= 0) {
+                            $(os[j]).attr('checked', 'true');
+                            $(os[j])[0].checked = true;
+                        };
+                    };
+                }
             };
-        };
-    };
+        },
+    });
+
 }
-main()
+$(function() {
+    // if(window.document.location.pathname=='/wanbi.aspx'){
+    //     location.href='index.aspx'
+    // }
+    // if($('a[href="login.aspx"]')[0]){
+    //     $('a[href="login.aspx"]')[0].click()
+    // }
+    // setTimeout(() => {
+    //     if($('a[href="index.aspx"]')[0]){
+    //         $('a[href="index.aspx"]')[0].click()
+    //     }
+    // }, 500);
+    // $('#ImageButton1').removeAttr('onclick')
+    main()
+})
