@@ -1,5 +1,5 @@
 {
-    "name": "新时代",
+    "name": "My First Extension",
     "version": "1",
     "manifest_version": 2,
     "description": "The first extension that I made.",
@@ -8,6 +8,6 @@
     },
     "content_scripts": [{
         "matches": ["http://*/*"],
-        "js": ["jquery.js", "doExam.js"]
+        "js": ["jquery.js","doExam.js"]
     }]
 }
