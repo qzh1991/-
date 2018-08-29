@@ -1,8 +1,8 @@
 {
-    "name": "My First Extension",
+    "name": "习近平新时代",
     "version": "1",
     "manifest_version": 2,
-    "description": "The first extension that I made.",
+    "description": "答题",
     "browser_action": {
         "default_icon": "icon.png"
     },

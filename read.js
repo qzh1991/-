@@ -1,14 +1,15 @@
-var express = require('express');
-var FormData = require('form-data');
-var bodyParser = require("body-parser");
-var app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+const mysql = require('mysql')
+const pool = mysql.createPool({
+    host: '193.112.163.17',
+    user: 'root',
+    password: 'okok',
+    database: 'Exam',
+    port: 3306
+})
 
 var readline = require('readline');
 var fs = require('fs');
 var os = require('os');
-
 
 var fReadName = './answer.txt';
 var fWriteName = './answer1.txt';
@@ -24,7 +25,7 @@ var objReadline = readline.createInterface({
     //  terminal: true
 });
 
-var questions = {}
+var questions = []
 var reg1 = /(\(|\（)(\w+|√|×)(\)|\）)?/g
 var reg2 = /\w+$/
 var reg3 = /\(\)|\（\）/g
@@ -42,57 +43,30 @@ objReadline.on('line', (l) => {
         num = l.slice(0, left)
         line = l.slice(left + 1)
     } else if (first == '答') {
-        a = l.slice(3)
-        questions[line] = a
+        a = l.slice(3).replace(/\s+/g, '')
+        let q={}
+        q.question=line
+        q.answer = a
+        questions.push(q)
         var tmp = num + '.' + line + ':' + a;
         fWrite.write(tmp + os.EOL); // 下一行
     }
 });
 
 objReadline.on('close', () => {
-    console.log('readline close...');
-});
-
-
-
-function query(i, l) {
-    let line = l
-    return new Promise(resolve => {
-        let left = line.indexOf('：')
-        line = line.slice(left + 1)
-        let right = line.lastIndexOf('①')
-        if (right > 0) {
-            line = line.slice(0, right)
-        }
-        let a = questions[line]
-        console.log(Number(i) + 1 + '.' + a)
-        if (!a) {
-            console.log(Number(i) + 1 + '.' + line)
-        }
-        resolve(a);
-    });
-}
-
-async function getData(array) {
-    let aa = []
-    for (const i in array) {
-        let b = await query(i, array[i])
-        aa.push(b)
-    }
-    return aa
-}
-
-app.post('/', function(req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST");
-    let array = JSON.parse(req.body.text)
-    getData(array).then(a => {
-        res.json(a);
+    console.log('答案采集完成');
+    pool.query("DROP TABLE `XinShiDaiXiJinPing`;", function (err, r) {
+        if (err) throw err
+        console.log('删除表完成');
+        pool.query("CREATE TABLE `Exam`.`XinShiDaiXiJinPing` (`id` INT NOT NULL AUTO_INCREMENT,`question` NVARCHAR(200) NULL,`answer` NVARCHAR(200) NULL,PRIMARY KEY (`id`));", function (err, r) {
+            if (err) throw err
+            console.log('重建表完成');
+            questions.forEach(q => {
+                pool.query("INSERT `Exam`.`XinShiDaiXiJinPing`(`question`,`answer`) VALUES(?,?);",[q.question,q.answer] , function (err, r) {
+                    if (err) throw err
+                })
+            });
+            console.log('答案上传完成');
+        })
     })
-});
-
-var server = app.listen(8083, function() {
-    var host = server.address().address; //地址
-    var port = server.address().port; //端口
-    console.log("应用实例，访问地址为 http://%s:%s", host, port);
 });
